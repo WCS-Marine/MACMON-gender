@@ -1,0 +1,97 @@
+---
+title: "Gender - wellbeing codes"
+author: "Emily Darling"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+library(tidyverse)
+library(janitor)
+library(here)
+
+data_original <- read_csv(here("data/MACMON_HWD_Country_Gender.csv")) %>% 
+  clean_names() %>% 
+  remove_empty()
+data_original
+nrow(data_original)
+
+data_original %>% 
+  tabyl(question)
+
+data_original %>% 
+  tabyl(country)
+
+data_original %>% 
+  tabyl(hwd)
+
+data_original %>% 
+  tabyl(gender)
+
+hist(data_original$code_counts)
+
+#create percentages by group for donut chart
+data <- data_original %>% 
+  group_by(question, 
+           country, 
+           gender) %>% 
+  mutate(sum = sum(code_counts), 
+         percentage = code_counts/sum * 100) #%>%
+  #filter(country == "Fiji" & gender == "Male")
+
+#donut chart
+ggplot(data = data, 
+       aes(x = 2, y = percentage, fill = hwd))+
+  geom_bar(stat = "identity") +
+  coord_polar("y", start = 200) +
+  theme_void() +
+  scale_fill_brewer(palette = "Dark2") + 
+  xlim(.2,2.5) + 
+  facet_grid(question ~ gender) + 
+  theme(legend.position = "bottom")
+
+```
+
+Add a loop to run plot by country
+
+```{r}
+#turn into a loop function by country
+
+country_list <- unique(data$country)
+country_list
+
+nrow(data)
+
+for (i in country_list) {
+  print(i)
+  i <- "PNG"
+ 
+  data_for_plot <- data %>% 
+    filter(country == i)
+  
+  donut_plot <- ggplot(data = data_for_plot, 
+                       aes(x = 2, y = percentage, fill = hwd)) + 
+    geom_bar(stat = "identity") +
+    coord_polar("y", start = 200) +
+    theme_void() +
+    scale_fill_brewer(palette = "Dark2") + 
+    xlim(.2,2.5) + 
+    facet_grid(question ~ gender) + 
+    theme(legend.position = "bottom")
+  
+  print(donut_plot)
+  
+}
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
